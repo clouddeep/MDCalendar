@@ -33,7 +33,7 @@
  *
  *  `MDCalendar` was developed with flexibility in mind and is consequently implemented as a
  *  subclass of `UIView`. This means that a calendar may be instantiated as a subview in an existing
- *  view hierarchy or pushed onto a navigation stack as the sole view of a `UIViewController`. 
+ *  view hierarchy or pushed onto a navigation stack as the sole view of a `UIViewController`.
  *  The latter behavior is demonstrated in the `MDCalendarDemo` project.
  *
  *  One of the philosophies used while designing `MDCalendar` was to minimize an explicit storage-based
@@ -42,7 +42,7 @@
  *  with an `endDate` of `[NSDate distantFuture]`.
  *
  *  ## Usage Example
- *  
+ *
  *  Suppose a view controller called `EventDetailsViewController` wants to allow
  *  users to modify the date of the event using a nice calendar picker. Hmm... let's
  *  use `MDCalendar` for that! `EventDetailsViewController` is a subclass of
@@ -88,16 +88,16 @@
  * Vertical spacing between weeks. Will reveal the background color
  * of your view.
  *
- * Default is 1pt. 
+ * Default is 1pt.
  */
 @property (nonatomic, assign) CGFloat lineSpacing;
 
 /**
- * Set `borderHeight` to manually provide a border color. 
+ * Set `borderHeight` to manually provide a border color.
  *
  * Default is 0pt.
  *
- * @warning `borderHeight` and `lineSpacing` are mutually exclusive. 
+ * @warning `borderHeight` and `lineSpacing` are mutually exclusive.
  * If `borderHeight` is set it will override lineSpacing.
  */
 @property (nonatomic, assign) CGFloat borderHeight;
@@ -110,6 +110,40 @@
  * @warning this will only apply if @see borderHeight is set
  */
 @property (nonatomic, strong) UIColor *borderColor;
+
+/**
+ * Set `circleWidth` to manually provide a background circle border width.
+ *
+ * Default is 0pt.
+ *
+ */
+@property (nonatomic, assign) CGFloat circleWidth;
+
+/**
+ * Set `circleWidthSelected` to manually provide a background circle border width of selected state.
+ *
+ * Default is 0pt.
+ *
+ */
+@property (nonatomic, assign) CGFloat circleWidthSelected;
+
+/**
+ * Border color of background circle border.
+ *
+ * Default is nil.
+ *
+ * @warning this will only apply if circleWidth is set
+ */
+@property (nonatomic, strong) UIColor *circleColor;
+
+/**
+ * Border color of background circle border of selected state.
+ *
+ * Default is nil.
+ *
+ * @warning this will only apply if circleWidthSelected is set
+ */
+@property (nonatomic, strong) UIColor *circleColorSelected;
 
 /**
  * Set to `YES` to display a border at the bottom of each month.
@@ -130,7 +164,7 @@
 @property (nonatomic, strong) NSDate  *startDate;
 
 /**
- * Specify a date to end the calendar. 
+ * Specify a date to end the calendar.
  * If no value is set it will default to three months out from the @see startDate
  */
 @property (nonatomic, strong) NSDate  *endDate;
@@ -140,6 +174,16 @@
  * Defaults to @see startDate
  */
 @property (nonatomic, strong) NSDate  *selectedDate;  /**< default is startDate */
+
+/**
+ * Allows you to manually record the indexpath of the date to be selected.
+ */
+@property (nonatomic, strong) NSIndexPath  *selectedDateIndexPath;
+
+/**
+ * Record the offset of the cell you select.
+ */
+@property (nonatomic, assign) CGPoint offsetPoint;
 
 
 ///--------------------------------
@@ -216,6 +260,11 @@
  */
 @property (nonatomic, strong) UIColor *highlightColor;
 
+@property (nonatomic, strong) UIImage *backgroundCircleImage;
+@property (nonatomic, strong) UIImage *backgroundCircleImageSelected;
+@property (nonatomic, strong) UIImage *highlightImage;
+@property (nonatomic, strong) UIImage *dotImage;
+
 
 ///--------------------------------
 /// @name Selection behavior
@@ -233,6 +282,12 @@
 @property (nonatomic, assign) BOOL showsDaysOutsideCurrentMonth;
 
 /**
+ * This implies that all the headers of collection view will show week days.
+ */
+@property (nonatomic, assign) BOOL showsWeekDaysOnEachMonth;
+
+
+/**
  * Setting the start date to a date in the middle of the month still shows every day before it
  * for that month. By default, it is possible to select these days. Set to `NO` to disallow
  * this behavior.
@@ -247,6 +302,28 @@
  */
 - (void)scrollCalendarToDate:(NSDate *)date animated:(BOOL)animated;
 
+/**
+ * Scroll calendar to make the slected date showed on top.
+ *  New method.
+ */
+- (void)scrollCalendarSelectedDateToTop:(BOOL)animated;
+
+/**
+ * Scroll calendar to make the today date showed on top.
+ *  New method.
+ */
+- (void)scrollCalendarToToday:(BOOL)animated;
+
+/**
+ * If you call scrollCalendarSelectedDateToTop:animated:, this method can make you scroll back to original offset.
+ * New method.
+ * @see scrollCalendarSelectedDateToTop:animated:
+ */
+- (void)scrollBackToOriginal;
+
+- (void)reloadCalendarView;
+
+
 @end
 
 
@@ -254,19 +331,19 @@
  * A delegate that responds to calendar events.
  *
  * Note: if a calendar view is pushed onto the navigation stack as the sole view of
- * a sparse view controller, then it is advised to subclass `MDCalendarDelegate` and 
- * implement the subclassed delegate in your parent view controller. 
+ * a sparse view controller, then it is advised to subclass `MDCalendarDelegate` and
+ * implement the subclassed delegate in your parent view controller.
  *
  * ## Example
  *
  * Suppose a view controller called `EventDetailsViewController` wants to allow
- * users to modify the date of the event using a nice calendar picker. Hmm... let's 
- * use `MDCalendar` for that! `EventDetailsViewController` is a subclass of 
+ * users to modify the date of the event using a nice calendar picker. Hmm... let's
+ * use `MDCalendar` for that! `EventDetailsViewController` is a subclass of
  * `UITableViewController` and selecting one of the rows should push a calendar
  * on-screen and allow users to modify the `eventDate` property of the `EventDetailsViewController`
- * 
+ *
  * The advised implementation of this is to create a sparse view controller to display an
- * `MDCalendar` (see the demo project for an example of how to do that). This view controller, 
+ * `MDCalendar` (see the demo project for an example of how to do that). This view controller,
  * let's call it `MDEventCalendarViewController` (creative, I know), will be pushed onto the navigation
  * stack and will need to communicate calendar events back to its parent view controller.
  * In order to do this elegantly, subclass `MDCalendarDelegate` in `MDEventCalendarViewController` and
