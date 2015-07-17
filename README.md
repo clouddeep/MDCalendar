@@ -1,6 +1,8 @@
 MDCalendar
 ==========
 
+MDCalendar is a special calendar layout for displaying multiple months once.
+
 ## Basic Use
 
 Please refer to [MDCalendar](https://github.com/distefam/MDCalendar).
