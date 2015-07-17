@@ -12,4 +12,4 @@ Please refer to [MDCalendar](https://github.com/distefam/MDCalendar).
 
 ## Note
 
-Still working for the code.
+Still working for the code. Not yet done for general use.
