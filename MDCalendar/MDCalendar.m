@@ -857,6 +857,10 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
             showIndicator = NO;
             cell.accessibilityElementsHidden = YES;
         }
+        if (isToday) {
+            cell.highlightView.hidden = YES;
+            
+        }
         cell.backgroundCircleView.hidden = !_showsDaysOutsideCurrentMonth;
         cell.userInteractionEnabled = NO;
     } else if ([date isEqualToDateSansTime:_selectedDate]) {
@@ -950,7 +954,6 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
 }
 
 // Helpers
-
 - (CGFloat)cellWidth {
     CGFloat boundsWidth = _collectionView.bounds.size.width;
     return floor(boundsWidth / (DAYS_IN_WEEK+1)) - kMDCalendarViewItemSpacing;
