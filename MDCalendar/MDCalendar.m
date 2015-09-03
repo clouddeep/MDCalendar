@@ -542,7 +542,7 @@ static CGFloat const kMDCalendarHeaderViewWeekdayBottomMargin  = 5.f;
 
 #define DAYS_IN_WEEK 7
 #define MONTHS_IN_YEAR 12
-#define MONTH_MARGIN_SPACING 0
+#define NUMBER_OF_ROW 8
 
 // Default spacing
 static CGFloat const kMDCalendarViewItemSpacing    = 0.f;
@@ -589,6 +589,7 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
         self.headerFont             = [UIFont systemFontOfSize:20];
         
         self.textColor          = [UIColor darkGrayColor];
+        self.textHighlightColor = [UIColor darkTextColor];
         self.headerTextColor    = _textColor;
         self.weekdayTextColor   = _textColor;
         
@@ -609,8 +610,6 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
 - (void)layoutSubviews {
     [super layoutSubviews];
     _collectionView.frame = self.bounds;
-//    CGFloat offsetX = MONTH_MARGIN_SPACING;
-//    _collectionView.frame = CGRectMake(offsetX, self.bounds.origin.y, self.bounds.size.width-offsetX, self.bounds.size.height);
     [self scrollCalendarToDate:_selectedDate animated:NO];
 }
 
@@ -706,6 +705,9 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
 }
 
 // Fix : 0 and multiple of 8 is not included in it.
+/*
+ * This method will return correct date for item．
+ */
 - (NSDate *)dateForIndexPath:(NSIndexPath *)indexPath {
     NSDate *date = [_startDate dateByAddingMonths:indexPath.section];
     NSDateComponents *components = [date components];
@@ -752,6 +754,7 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
         self.offsetPoint = [scrollView contentOffset];
     }
 }
+
 - (void)reloadCalendarView
 {
     [self.collectionView reloadData];
@@ -776,29 +779,13 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     NSDate *date = [self dateForIndexPath:indexPath];
-    BOOL isLeftSideBlankCell = (indexPath.item % (DAYS_IN_WEEK+1) == 0);
+    BOOL isLeftSideCell = (indexPath.item % NUMBER_OF_ROW == 0);
+    BOOL isLeftSideBlankCell = (isLeftSideCell && indexPath.item != 0);
     NSInteger sectionMonth = [self monthForSection:indexPath.section];
     
     MDCalendarViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:kMDCalendarViewCellIdentifier forIndexPath:indexPath];
     
-    cell.userInteractionEnabled = !isLeftSideBlankCell;
-    cell.hidden = (isLeftSideBlankCell && indexPath.item != 0);
     
-    // Left side cell have nothing to do.
-    // First cell show month label only.
-    if (isLeftSideBlankCell && indexPath.item != 0) {
-        cell.accessibilityElementsHidden = YES;
-        return cell;
-    }else if (indexPath.item == 0) {
-        cell.label.text = [NSString stringWithFormat:@"%tu月", sectionMonth];
-        cell.label.font = _headerFont;
-        cell.label.textColor = _headerTextColor;
-        cell.backgroundCircleView.hidden = YES;
-        cell.indicatorColor = [UIColor clearColor];
-        cell.highlightView.hidden = YES;
-        cell.accessibilityElementsHidden = NO;
-        return cell;
-    }
     
     // Setup normal cell...
     BOOL isToday = [date isEqualToDateSansTime:[self currentDate]];
@@ -806,7 +793,7 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
     
     cell.backgroundColor       = _cellBackgroundColor;
     cell.font                  = _dayFont;
-    cell.textColor             = isToday ? _highlightColor : _textColor;
+    cell.textColor             = isToday ? _textHighlightColor : _textColor;
     cell.date                  = date;
     cell.borderHeight          = _borderHeight;
     cell.borderColor           = _borderColor;
@@ -825,6 +812,25 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
     BOOL showIndicator = NO;
     if ([_delegate respondsToSelector:@selector(calendarView:shouldShowIndicatorForDate:)]) {
         showIndicator = [_delegate calendarView:self shouldShowIndicatorForDate:date];
+    }
+    
+    cell.userInteractionEnabled = !isLeftSideCell;
+    cell.hidden = isLeftSideBlankCell;
+    
+    // Left side cell have nothing to do.
+    // First cell show month label only.
+    if (isLeftSideBlankCell) {
+        cell.accessibilityElementsHidden = YES;
+        return cell;
+    }else if (indexPath.item == 0) {
+        cell.label.text = [NSString stringWithFormat:@"%tu月", sectionMonth];
+        cell.label.font = _headerFont;
+        cell.label.textColor = _headerTextColor;
+        cell.backgroundCircleView.hidden = YES;
+        cell.indicatorColor = [UIColor clearColor];
+        cell.highlightView.hidden = YES;
+        cell.accessibilityElementsHidden = NO;
+        return cell;
     }
     
     // Today and other days

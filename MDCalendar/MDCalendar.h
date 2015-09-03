@@ -221,6 +221,12 @@
 @property (nonatomic, strong) UIColor *textColor;
 
 /**
+ * Text highlight color for @see dayFont
+ * Default is dark gray
+ */
+@property (nonatomic, strong) UIColor *textHighlightColor;
+
+/**
  * Text color for @see headerFont
  * Default is @see textColor
  */
@@ -321,6 +327,10 @@
  */
 - (void)scrollBackToOriginal;
 
+/**
+ * Reload whole calendar.
+ * New method.
+ */
 - (void)reloadCalendarView;
 
 
