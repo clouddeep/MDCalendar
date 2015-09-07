@@ -184,6 +184,11 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
 
 - (void)setSelected:(BOOL)selected
 {
+    /* 
+     * Circle and hightlight(selected) may be animated.
+     * Hightlight(selected) is a BIG dot behind the label. It will zoom up suddenly.
+     */
+    
     UIView *highlightView        = _highlightView;
     UIView *backgroundCircleView = _backgroundCircleView;
     UIImageView *circleImageView = _circleImageView;
@@ -193,8 +198,6 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
 //    }else {
 //        highlightView.hidden = NO;
 //    }
-    
-//    highlightView.hidden = self.selected;
     
     // We don't need this if selected feature is only displayed on the circle.
 //    _label.textColor = selected ? self.backgroundColor : _textColor;
@@ -215,8 +218,12 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
               initialSpringVelocity:1.0
                             options:UIViewAnimationOptionCurveEaseInOut
                          animations:^{
-                             highlightView.backgroundColor = _selectedColor;
-                             highlightView.transform = CGAffineTransformIdentity;
+                             if (_selectedColor) {
+                                 highlightView.backgroundColor = _selectedColor;
+                                 highlightView.transform = CGAffineTransformIdentity;
+                                 // You can change text color here.
+                             }
+                             
                              backgroundCircleView.layer.borderWidth = _circleWidthSelected;
                              backgroundCircleView.layer.borderColor = _circleColorSelected.CGColor;
                              
@@ -229,18 +236,16 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
               initialSpringVelocity:1.0
                             options:UIViewAnimationOptionCurveLinear
                          animations:^{
-                             highlightView.transform = CGAffineTransformMakeScale(.1, .1);
-                             highlightView.backgroundColor = [highlightView.backgroundColor colorWithAlphaComponent:0.1f];
+                             if (_selectedColor) {
+                                 highlightView.backgroundColor = [UIColor clearColor];
+                                 highlightView.hidden = YES;
+
+                             }
                              backgroundCircleView.layer.borderWidth = _circleWidth;
                              backgroundCircleView.layer.borderColor = _circleColor.CGColor;
                              
                          }
-                         completion:^(BOOL finished) {
-                             if (finished) {
-                                 highlightView.backgroundColor = [UIColor clearColor];
-                                 highlightView.hidden = YES;
-                             }
-                         }];
+                         completion:nil];
     }
     [super setSelected:selected];
 }
