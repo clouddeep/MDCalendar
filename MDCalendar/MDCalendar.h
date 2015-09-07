@@ -266,6 +266,7 @@
  */
 @property (nonatomic, strong) UIColor *highlightColor;
 
+
 /*-----------------------*/
 /*----- New feature -----*/
 /*-----------------------*/
@@ -282,6 +283,9 @@
 @property (nonatomic, strong) UIImage *backgroundCircleImageSelected;
 @property (nonatomic, strong) UIImage *highlightImage;
 @property (nonatomic, strong) UIImage *dotImage;
+
+@property (nonatomic, strong) UIColor *selectedColor;
+
 
 
 ///--------------------------------

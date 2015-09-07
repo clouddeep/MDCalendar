@@ -30,6 +30,7 @@
 @property (nonatomic, assign) UIFont  *font;
 @property (nonatomic, strong) UIColor *textColor;
 @property (nonatomic, assign) UIColor *highlightColor;
+@property (nonatomic, assign) UIColor *selectedColor;
 
 @property (nonatomic, assign) CGFloat  borderHeight;
 @property (nonatomic, assign) UIColor *borderColor;
@@ -187,11 +188,14 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
     UIView *backgroundCircleView = _backgroundCircleView;
     UIImageView *circleImageView = _circleImageView;
     
-    if (![self.date isEqualToDateSansTime:[NSDate date]]) {
-        highlightView.hidden = YES; //!selected;
-    }else {
-        highlightView.hidden = NO;
-    }
+//    if (![self.date isEqualToDateSansTime:[NSDate date]]) {
+//        highlightView.hidden = YES; //!selected;
+//    }else {
+//        highlightView.hidden = NO;
+//    }
+    
+//    highlightView.hidden = self.selected;
+    
     // We don't need this if selected feature is only displayed on the circle.
 //    _label.textColor = selected ? self.backgroundColor : _textColor;
     if (!circleImageView.hidden) {
@@ -203,14 +207,16 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
         return;
     }
     if (!self.selected && selected) {
-//                highlightView.transform = CGAffineTransformMakeScale(.1f, .1f);
+        highlightView.hidden = NO;
+        highlightView.transform = CGAffineTransformMakeScale(.1f, .1f);
         [UIView animateWithDuration:0.4
                               delay:0.0
              usingSpringWithDamping:0.5
               initialSpringVelocity:1.0
                             options:UIViewAnimationOptionCurveEaseInOut
                          animations:^{
-//                             highlightView.transform = CGAffineTransformIdentity;
+                             highlightView.backgroundColor = _selectedColor;
+                             highlightView.transform = CGAffineTransformIdentity;
                              backgroundCircleView.layer.borderWidth = _circleWidthSelected;
                              backgroundCircleView.layer.borderColor = _circleColorSelected.CGColor;
                              
@@ -219,15 +225,22 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
     }else if (self.selected && !selected) {
         [UIView animateWithDuration:0.4
                               delay:0.0
-             usingSpringWithDamping:0.5
+             usingSpringWithDamping:1.0
               initialSpringVelocity:1.0
-                            options:UIViewAnimationOptionCurveEaseInOut
+                            options:UIViewAnimationOptionCurveLinear
                          animations:^{
+                             highlightView.transform = CGAffineTransformMakeScale(.1, .1);
+                             highlightView.backgroundColor = [highlightView.backgroundColor colorWithAlphaComponent:0.1f];
                              backgroundCircleView.layer.borderWidth = _circleWidth;
                              backgroundCircleView.layer.borderColor = _circleColor.CGColor;
                              
                          }
-                         completion:nil];
+                         completion:^(BOOL finished) {
+                             if (finished) {
+                                 highlightView.backgroundColor = [UIColor clearColor];
+                                 highlightView.hidden = YES;
+                             }
+                         }];
     }
     [super setSelected:selected];
 }
@@ -586,6 +599,7 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
         
         self.cellBackgroundColor    = nil;
         self.highlightColor         = self.tintColor;
+        self.selectedColor          = [[UIColor lightGrayColor] colorWithAlphaComponent:0.4f];
         self.indicatorColor         = [UIColor lightGrayColor];
         self.circleColor            = nil;
         self.circleColorSelected    = nil;
@@ -837,6 +851,7 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
     cell.borderColor           = _borderColor;
     
     cell.highlightColor        = _highlightColor;
+    cell.selectedColor         = _selectedColor;
     if (_highlightImage) cell.highlightImage = _highlightImage;
     
     // Draw circle
