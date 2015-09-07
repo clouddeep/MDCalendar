@@ -266,7 +266,19 @@
  */
 @property (nonatomic, strong) UIColor *highlightColor;
 
+/*-----------------------*/
+/*----- New feature -----*/
+/*-----------------------*/
+
+/**
+ * Image for highlight view of normal state. If you set this image, you should give backgroundCircleImageSelected.
+ * Default is @see backgroundCircleImageSelected
+ */
 @property (nonatomic, strong) UIImage *backgroundCircleImage;
+/**
+ * Image for highlight view of selected state. If you set this image, you should give backgroundCircleImageSelected.
+ * Default is @see backgroundCircleImageSelected
+ */
 @property (nonatomic, strong) UIImage *backgroundCircleImageSelected;
 @property (nonatomic, strong) UIImage *highlightImage;
 @property (nonatomic, strong) UIImage *dotImage;

@@ -56,8 +56,6 @@
 @property (nonatomic, strong) UIImageView *highlightImageView;
 @property (nonatomic, strong) UIImageView *dotImageView;
 
-//@property (nonatomic, strong) UIImageView *backgroundCircleImageView;
-//@property (nonatomic, strong)
 @end
 
 static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIdentifier";
@@ -102,14 +100,13 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
         
         [self.highlightView        addSubview:highlightImageView];
         [self.backgroundCircleView addSubview:circleImageView];
-//        [self.indicatorView        addSubview:dotImageView];
+        [self.indicatorView        addSubview:dotImageView];
         
         [self.contentView addSubview:highlightView];
         [self.contentView addSubview:label];
-        [self.contentView addSubview:bottomBorderView];
         [self.contentView addSubview:indicatorView];
         [self.contentView addSubview:backgroundCircleView];
-//        [self.contentView addSubview:circleImageView];
+        [self.contentView addSubview:bottomBorderView];
         
         self.isAccessibilityElement = YES;
     }
@@ -122,25 +119,31 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
     self.accessibilityLabel = [NSString stringWithFormat:@"%@, %@ of %@ %@", [date weekdayString], [date dayOrdinalityString], [date monthString], @([date year])];
 }
 
-- (void)setFont:(UIFont *)font {
+- (void)setFont:(UIFont *)font
+{
     _label.font = font;
 }
 
-- (void)setTextColor:(UIColor *)textColor {
+- (void)setTextColor:(UIColor *)textColor
+{
     _textColor = textColor;
     _label.textColor = textColor;
 }
 
-- (void)setHighlightColor:(UIColor *)highlightColor {
+- (void)setHighlightColor:(UIColor *)highlightColor
+{
     _highlightView.backgroundColor = highlightColor;
+    _highlightView.hidden = NO;
 }
 
-- (void)setBorderColor:(UIColor *)borderColor {
+- (void)setBorderColor:(UIColor *)borderColor
+{
     _borderView.backgroundColor = borderColor;
     _borderView.hidden = NO;
 }
 
-- (void)setIndicatorColor:(UIColor *)indicatorColor {
+- (void)setIndicatorColor:(UIColor *)indicatorColor
+{
     _indicatorView.backgroundColor = indicatorColor;
     _indicatorView.hidden = NO;
 }
@@ -156,7 +159,6 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
 {
     _circleImageView.image = circleImage;
     _circleImageView.hidden = NO;
-//    [_backgroundCircleView addSubview:_circleImageView];
     _backgroundCircleView.hidden = NO;
 }
 
@@ -169,7 +171,6 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
 {
     _highlightImageView.image = highlightImage;
     _highlightImageView.hidden = NO;
-    //    [_highlightView addSubview:_highlightImageView];
     _highlightView.hidden = NO;
 }
 
@@ -180,15 +181,18 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
     _indicatorView.hidden = NO;
 }
 
-- (void)setSelected:(BOOL)selected {
-//    UIView *highlightView        = _highlightView;
+- (void)setSelected:(BOOL)selected
+{
+    UIView *highlightView        = _highlightView;
     UIView *backgroundCircleView = _backgroundCircleView;
     UIImageView *circleImageView = _circleImageView;
-//    if (![self.date isEqualToDateSansTime:[NSDate date]]) {
-//        highlightView.hidden = YES; //!selected;
-//    }else {
-//        highlightView.hidden = NO;
-//    }
+    
+    if (![self.date isEqualToDateSansTime:[NSDate date]]) {
+        highlightView.hidden = YES; //!selected;
+    }else {
+        highlightView.hidden = NO;
+    }
+    // We don't need this if selected feature is only displayed on the circle.
 //    _label.textColor = selected ? self.backgroundColor : _textColor;
     if (!circleImageView.hidden) {
         circleImageView.highlighted = selected;
@@ -211,9 +215,7 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
                              backgroundCircleView.layer.borderColor = _circleColorSelected.CGColor;
                              
                          }
-                         completion:^(BOOL finished) {
-                             nil;
-                         }];
+                         completion:nil];
     }else if (self.selected && !selected) {
         [UIView animateWithDuration:0.4
                               delay:0.0
@@ -225,9 +227,7 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
                              backgroundCircleView.layer.borderColor = _circleColor.CGColor;
                              
                          }
-                         completion:^(BOOL finished) {
-                             nil;
-                         }];
+                         completion:nil];
     }
     [super setSelected:selected];
 }
@@ -273,6 +273,11 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
     
     _indicatorView.frame = indicatorFrame;
     _indicatorView.layer.cornerRadius = CGRectGetHeight(_indicatorView.bounds) / 2;
+    
+    if (!_dotImageView.hidden) {
+        _dotImageView.frame = CGRectMake(0, 0, _indicatorView.frame.size.width, _indicatorView.frame.size.height);
+    }
+    
     
 }
 
@@ -778,16 +783,49 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
 #pragma mark - UICollectionViewDelegate
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    NSDate *date = [self dateForIndexPath:indexPath];
+    
+    /*-----------------------*/
+    /*----- New feature -----
+     *-----------------------*
+     * We have 4 types of cell in a section:
+     * Left side: 1. Month label        : Only label (and bottom/line biew)
+     *            2. Blank              : Invisible
+     * Days     : 3. Day of this month  : Normal Format (5 types: before, today(selected), future(selected))
+     *            4. Day of other month : Invisible or lighter format
+     *-----------------------*/
+
     BOOL isLeftSideCell = (indexPath.item % NUMBER_OF_ROW == 0);
     BOOL isLeftSideBlankCell = (isLeftSideCell && indexPath.item != 0);
     NSInteger sectionMonth = [self monthForSection:indexPath.section];
     
     MDCalendarViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:kMDCalendarViewCellIdentifier forIndexPath:indexPath];
     
+    cell.userInteractionEnabled = !isLeftSideCell;
+    cell.hidden = isLeftSideBlankCell;
     
+    /*-------------------------------*/
+    /*---- Handle Left side cell ----*/
+    /*-------------------------------*/
+    if (isLeftSideBlankCell) {
+        cell.accessibilityElementsHidden = YES;
+    }else if (indexPath.item == 0) { /*----- Item for Month label -----*/
+        cell.label.text = [NSString stringWithFormat:@"%tu月", sectionMonth];
+        cell.label.font = _headerFont;
+        cell.label.textColor = _headerTextColor;
+        cell.backgroundCircleView.hidden = YES;
+        cell.indicatorColor = [UIColor clearColor];
+        cell.highlightView.hidden = YES;
+        cell.accessibilityElementsHidden = NO;
+    }
     
-    // Setup normal cell...
+    if (isLeftSideCell) return cell;
+    
+    /*-------------------------------*/
+    /*------- Handle Day cell -------*/
+    /*-------------------------------*/
+    NSDate *date = [self dateForIndexPath:indexPath];
+    
+    /*------- Basic setup -------*/
     BOOL isToday = [date isEqualToDateSansTime:[self currentDate]];
     BOOL isTomorrow = [date isAfterDate:[self currentDate]];
     
@@ -799,14 +837,18 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
     cell.borderColor           = _borderColor;
     
     cell.highlightColor        = _highlightColor;
+    if (_highlightImage) cell.highlightImage = _highlightImage;
+    
+    // Draw circle
     cell.circleWidth           = _circleWidth;
     cell.circleWidthSelected   = _circleWidthSelected;
     cell.circleColor           = isTomorrow ? _circleColor : [_circleColor colorWithAlphaComponent:0.3];
     cell.circleColorSelected   = _circleColorSelected;
-    
-    cell.circleImage         = _backgroundCircleImage;
-    cell.circleImageSelected = _backgroundCircleImageSelected;
-    cell.highlightImage      = _highlightImage;
+    // Circle Image
+    if (_backgroundCircleImage) {
+        cell.circleImage         = _backgroundCircleImage;
+        cell.circleImageSelected = _backgroundCircleImageSelected;
+    }
     
     // Show indicator dot under the day. You need to implement method shouldShowIndicatorForDate:
     BOOL showIndicator = NO;
@@ -814,36 +856,17 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
         showIndicator = [_delegate calendarView:self shouldShowIndicatorForDate:date];
     }
     
-    cell.userInteractionEnabled = !isLeftSideCell;
-    cell.hidden = isLeftSideBlankCell;
-    
-    // Left side cell have nothing to do.
-    // First cell show month label only.
-    if (isLeftSideBlankCell) {
-        cell.accessibilityElementsHidden = YES;
-        return cell;
-    }else if (indexPath.item == 0) {
-        cell.label.text = [NSString stringWithFormat:@"%tu月", sectionMonth];
-        cell.label.font = _headerFont;
-        cell.label.textColor = _headerTextColor;
-        cell.backgroundCircleView.hidden = YES;
-        cell.indicatorColor = [UIColor clearColor];
-        cell.highlightView.hidden = YES;
-        cell.accessibilityElementsHidden = NO;
-        return cell;
-    }
-    
     // Today and other days
     cell.backgroundCircleView.hidden = isToday;
     cell.highlightView.hidden        = !isToday;
     
     // Cell interaction enable/disable
-    cell.userInteractionEnabled = [self collectionView:collectionView shouldSelectItemAtIndexPath:indexPath] ? YES : NO;
+    BOOL shouldSelectedThisItem = [self collectionView:collectionView shouldSelectItemAtIndexPath:indexPath];
+    cell.userInteractionEnabled = shouldSelectedThisItem;
     
     // Disable non-selectable cells
-    if (![self collectionView:collectionView shouldSelectItemAtIndexPath:indexPath]) {
-        //        cell.textColor = [date isEqualToDateSansTime:[self currentDate]] ? cell.textColor : [cell.textColor colorWithAlphaComponent:0.2];
-        cell.userInteractionEnabled = NO;
+    if (!shouldSelectedThisItem) {
+//        cell.textColor = [date isEqualToDateSansTime:[self currentDate]] ? cell.textColor : [cell.textColor colorWithAlphaComponent:0.2];
         
         // If the cell is outside the selectable range, and it is not today, tell the user
         // that it is an invalid date ("dimmed" is what Apple uses for disabled buttons).
@@ -852,21 +875,23 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
         }
     }
     
+    cell.accessibilityElementsHidden = NO;
     
     // Handle showing cells outside of current month
-    cell.accessibilityElementsHidden = NO;
     if ([date month] != sectionMonth) {
         if (_showsDaysOutsideCurrentMonth) {
             cell.backgroundColor = [cell.backgroundColor colorWithAlphaComponent:0.2];
+            
+            CGFloat outerAlpha = 0.3f;
+            cell.textColor = [cell.textColor colorWithAlphaComponent:outerAlpha];
+            cell.circleImageView.alpha = outerAlpha;
+            cell.indicatorView.alpha = outerAlpha;
         } else {
             cell.label.text = @"";
             showIndicator = NO;
             cell.accessibilityElementsHidden = YES;
         }
-        if (isToday) {
-            cell.highlightView.hidden = YES;
-            
-        }
+        cell.label.hidden = !_showsDaysOutsideCurrentMonth;
         cell.backgroundCircleView.hidden = !_showsDaysOutsideCurrentMonth;
         cell.userInteractionEnabled = NO;
     } else if ([date isEqualToDateSansTime:_selectedDate]) {
@@ -875,7 +900,12 @@ static CGFloat const kMDCalendarViewSectionSpacing = 0.f;
         [collectionView selectItemAtIndexPath:indexPath animated:YES scrollPosition:UICollectionViewScrollPositionNone];
     }
     
-    cell.indicatorColor = showIndicator ? _indicatorColor : [UIColor clearColor];
+    /*------- Day cell dot -------*/
+    if (_dotImage) {
+        cell.dotImage = showIndicator ? _dotImage : nil;
+    }else {
+        cell.indicatorColor = showIndicator ? _indicatorColor : [UIColor clearColor];
+    }
     
     return cell;
 }
