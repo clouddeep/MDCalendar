@@ -193,22 +193,12 @@ static NSString * const kMDCalendarViewCellIdentifier = @"kMDCalendarViewCellIde
     UIView *backgroundCircleView = _backgroundCircleView;
     UIImageView *circleImageView = _circleImageView;
     
-//    if (![self.date isEqualToDateSansTime:[NSDate date]]) {
-//        highlightView.hidden = YES; //!selected;
-//    }else {
-//        highlightView.hidden = NO;
-//    }
-    
-    // We don't need this if selected feature is only displayed on the circle.
-//    _label.textColor = selected ? self.backgroundColor : _textColor;
+    // If you give images for normal and highlight states, this will switch the image.
     if (!circleImageView.hidden) {
         circleImageView.highlighted = selected;
         return;
     }
-    
-    if (backgroundCircleView.hidden) {
-        return;
-    }
+        
     if (!self.selected && selected) {
         highlightView.hidden = NO;
         highlightView.transform = CGAffineTransformMakeScale(.1f, .1f);
